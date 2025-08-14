@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { io } from "socket.io-client";
 
-const socket = io("https://chat-app-backend-4-c9lw.onrender.com"); // URL backend
+// Kết nối Socket.IO với backend và ép dùng websocket
+const socket = io("https://chat-app-backend-4-c9lw.onrender.com", {
+  transports: ["websocket"]
+});
 
 function App() {
   const [username, setUsername] = useState("");
@@ -10,19 +13,22 @@ function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
-    // Nhận lịch sử chat
     socket.on("chatHistory", (history) => {
       setMessages(history);
     });
 
-    // Nhận tin nhắn mới
     socket.on("receiveMessage", (msg) => {
       setMessages((prev) => [...prev, msg]);
+    });
+
+    socket.on("connect_error", (err) => {
+      console.error("Socket connection error:", err.message);
     });
 
     return () => {
       socket.off("chatHistory");
       socket.off("receiveMessage");
+      socket.off("connect_error");
     };
   }, []);
 
