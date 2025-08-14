@@ -1,77 +1,214 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { io } from "socket.io-client";
+import EmojiPicker from "emoji-picker-react";
+import "./App.css";
 
-// Kết nối Socket.IO với backend và ép dùng websocket
 const socket = io("https://chat-app-backend-4-c9lw.onrender.com", {
   transports: ["websocket"]
 });
 
 function App() {
-  const [username, setUsername] = useState("");
+  const [username, setUsername] = useState(localStorage.getItem("chatUsername") || "");
+  const [avatar, setAvatar] = useState(localStorage.getItem("chatAvatar") || "");
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([]);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem("chatUsername"));
+  const [showEmoji, setShowEmoji] = useState(false);
+  const [typingUser, setTypingUser] = useState("");
+
+  const chatEndRef = useRef(null);
+
+  // Hàm hash tên thành màu
+  const stringToColor = (str) => {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const color = "#" + ((hash >> 24) & 0xFF).toString(16).padStart(2, "0") +
+      ((hash >> 16) & 0xFF).toString(16).padStart(2, "0") +
+      ((hash >> 8) & 0xFF).toString(16).padStart(2, "0");
+    return color;
+  };
 
   useEffect(() => {
-    socket.on("chatHistory", (history) => {
-      setMessages(history);
-    });
+    socket.on("chatHistory", (history) => setMessages(history));
+    socket.on("receiveMessage", (msg) => setMessages((prev) => [...prev, msg]));
 
-    socket.on("receiveMessage", (msg) => {
-      setMessages((prev) => [...prev, msg]);
-    });
-
-    socket.on("connect_error", (err) => {
-      console.error("Socket connection error:", err.message);
+    socket.on("userTyping", (data) => {
+      if (data.username !== username) {
+        setTypingUser(data.username);
+        setTimeout(() => setTypingUser(""), 1500);
+      }
     });
 
     return () => {
       socket.off("chatHistory");
       socket.off("receiveMessage");
-      socket.off("connect_error");
+      socket.off("userTyping");
     };
-  }, []);
+  }, [username]);
+
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, isLoggedIn]);
 
   const sendMessage = () => {
     if (message.trim()) {
-      socket.emit("sendMessage", { username, text: message });
+      socket.emit("sendMessage", {
+        username,
+        avatar,
+        text: message,
+        time: new Date().toLocaleTimeString()
+      });
       setMessage("");
     }
   };
 
+  const handleLogin = () => {
+    if (username.trim()) {
+      localStorage.setItem("chatUsername", username);
+      localStorage.setItem("chatAvatar", avatar);
+      setIsLoggedIn(true);
+    }
+  };
+
+  const onEmojiClick = (emojiObject) => {
+    setMessage((prev) => prev + emojiObject.emoji);
+  };
+
+  const handleTyping = (e) => {
+    setMessage(e.target.value);
+    socket.emit("typing", { username });
+  };
+
+  const handleAvatarUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => setAvatar(reader.result);
+    reader.readAsDataURL(file);
+  };
+
   if (!isLoggedIn) {
     return (
-      <div style={{ textAlign: "center", marginTop: "50px" }}>
-        <h2>Nhập tên để bắt đầu chat</h2>
-        <input
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          placeholder="Tên của bạn"
-        />
-        <button onClick={() => username && setIsLoggedIn(true)}>Vào chat</button>
+      <div className="login-screen">
+        <div className="login-box">
+          <h2>💬 Chat App</h2>
+          <input
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            placeholder="Nhập tên của bạn"
+          />
+          <input type="file" accept="image/*" onChange={handleAvatarUpload} />
+          {avatar && (
+            <div style={{ margin: "10px 0" }}>
+              <img
+                src={avatar}
+                alt="avatar preview"
+                style={{ width: 50, height: 50, borderRadius: "50%" }}
+              />
+            </div>
+          )}
+          <button onClick={handleLogin}>Vào chat</button>
+        </div>
       </div>
     );
   }
 
   return (
-    <div style={{ width: "400px", margin: "20px auto", border: "1px solid #ccc", padding: "10px" }}>
-      <h2>💬 Chat App</h2>
-      <div style={{ height: "300px", overflowY: "scroll", border: "1px solid #ddd", padding: "5px" }}>
-        {messages.map((msg, index) => (
-          <div key={index} style={{ marginBottom: "8px" }}>
-            <strong>{msg.username}:</strong> {msg.text}
-          </div>
-        ))}
+    <div className="chat-container">
+      {/* Header */}
+      <div className="chat-header">
+        <h3>💬 Chat Room</h3>
+        <span>{username}</span>
       </div>
-      <div style={{ marginTop: "10px" }}>
+
+      {/* Messages */}
+      <div className="chat-messages">
+        {messages.map((msg, index) => {
+          const isMine = msg.username === username;
+          const showAvatar =
+            index === messages.length - 1 || messages[index + 1].username !== msg.username;
+          const showUsername =
+            index === 0 || messages[index - 1].username !== msg.username;
+
+          const bubbleColor = !isMine ? stringToColor(msg.username) : "#0084ff";
+
+          return (
+            <div
+              key={index}
+              className={`message-row ${isMine ? "mine" : "other"} animate-message`}
+            >
+              {!isMine && (
+                <div className="avatar-container">
+                  {showAvatar ? (
+                    msg.avatar ? (
+                      <img
+                        src={msg.avatar}
+                        alt="avatar"
+                        className="avatar"
+                      />
+                    ) : (
+                      <div className="avatar">
+                        {msg.username.charAt(0).toUpperCase()}
+                      </div>
+                    )
+                  ) : (
+                    <div className="avatar-spacer"></div>
+                  )}
+                </div>
+              )}
+              <div className="message-content">
+                {showUsername && !isMine && (
+                  <p className="username">{msg.username}</p>
+                )}
+                <div
+                  className={`bubble ${isMine ? "bubble-mine" : "bubble-other"}`}
+                  style={{ background: bubbleColor }}
+                >
+                  {msg.text}
+                </div>
+                <p className={`time ${isMine ? "time-right" : "time-left"}`}>
+                  {msg.time || ""}
+                </p>
+              </div>
+            </div>
+          );
+        })}
+
+        {/* Typing indicator */}
+        {typingUser && (
+          <p className="typing-indicator">{typingUser} đang nhập...</p>
+        )}
+
+        <div ref={chatEndRef}></div>
+      </div>
+
+      {/* Input */}
+      <div className="chat-input">
+        <button
+          className="emoji-btn"
+          onClick={() => setShowEmoji((prev) => !prev)}
+        >
+          😀
+        </button>
+        {showEmoji && (
+          <div className="emoji-picker">
+            <EmojiPicker onEmojiClick={onEmojiClick} />
+          </div>
+        )}
         <input
           value={message}
-          onChange={(e) => setMessage(e.target.value)}
+          onChange={handleTyping}
           placeholder="Nhập tin nhắn..."
-          style={{ width: "70%" }}
+          onKeyDown={(e) => e.key === "Enter" && sendMessage()}
         />
-        <button onClick={sendMessage} style={{ width: "28%" }}>
-          Gửi
+        <button className="send-btn" onClick={sendMessage}>
+          <img
+            src="/send-icon.png"
+            alt="Send"
+            style={{ width: "20px", height: "20px" }}
+          />
         </button>
       </div>
     </div>
