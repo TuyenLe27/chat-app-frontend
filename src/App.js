@@ -4,7 +4,7 @@ import EmojiPicker from "emoji-picker-react";
 import "./App.css";
 
 const socket = io("https://chat-app-backend-4-c9lw.onrender.com", {
-  transports: ["websocket"]
+  transports: ["websocket"],
 });
 
 function App() {
@@ -18,6 +18,7 @@ function App() {
 
   const chatEndRef = useRef(null);
 
+  // Lắng nghe socket events
   useEffect(() => {
     socket.on("chatHistory", (history) => setMessages(history));
     socket.on("receiveMessage", (msg) => setMessages((prev) => [...prev, msg]));
@@ -36,40 +37,48 @@ function App() {
     };
   }, [username]);
 
+  // Auto scroll
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isLoggedIn]);
 
+  // Gửi tin nhắn
   const sendMessage = () => {
     if (message.trim()) {
       socket.emit("sendMessage", {
         username,
         avatar,
         text: message,
-        time: new Date().toLocaleTimeString()
+        time: new Date().toLocaleTimeString(),
       });
       setMessage("");
     }
   };
 
+  // Đăng nhập
   const handleLogin = () => {
     if (username.trim()) {
       localStorage.setItem("chatUsername", username);
       localStorage.setItem("chatAvatar", avatar);
       setIsLoggedIn(true);
+
+      // chỉ gửi username + avatar
       socket.emit("userJoined", { username, avatar });
     }
   };
 
+  // Chọn emoji
   const onEmojiClick = (emojiObject) => {
     setMessage((prev) => prev + emojiObject.emoji);
   };
 
+  // Khi gõ tin nhắn
   const handleTyping = (e) => {
     setMessage(e.target.value);
     socket.emit("typing", { username });
   };
 
+  // Upload ảnh avatar
   const handleAvatarUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -78,6 +87,7 @@ function App() {
     reader.readAsDataURL(file);
   };
 
+  // Màn hình login
   if (!isLoggedIn) {
     return (
       <div className="login-screen">
@@ -104,6 +114,7 @@ function App() {
     );
   }
 
+  // Màn hình chat
   return (
     <div className="chat-container">
       {/* Header */}
@@ -132,11 +143,7 @@ function App() {
                 <div className="avatar-container">
                   {showAvatar ? (
                     msg.avatar ? (
-                      <img
-                        src={msg.avatar}
-                        alt="avatar"
-                        className="avatar"
-                      />
+                      <img src={msg.avatar} alt="avatar" className="avatar" />
                     ) : (
                       <div className="avatar">
                         {msg.username.charAt(0).toUpperCase()}
