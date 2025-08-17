@@ -1,76 +1,26 @@
-/* ====== Tổng thể ====== */
 body {
   margin: 0;
   font-family: Arial, sans-serif;
   background: #f0f2f5;
 }
 
-/* ====== Màn hình login ====== */
-.login-screen {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  background: #f0f2f5;
-}
-
-.login-box {
-  background: white;
-  padding: 30px;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  text-align: center;
-  width: 300px;
-  animation: fadeIn 0.5s ease-in-out;
-}
-
-.login-box h2 {
-  margin-bottom: 15px;
-}
-
-.login-box input {
-  width: 100%;
-  padding: 10px;
-  margin: 8px 0;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-}
-
-.login-box button {
-  padding: 10px 20px;
-  border: none;
-  border-radius: 8px;
-  background: #0084ff;
-  color: white;
-  cursor: pointer;
-  margin-top: 10px;
-  font-weight: bold;
-  transition: background 0.3s;
-}
-
-.login-box button:hover {
-  background: #006fe0;
-}
-
-/* ====== Khung chat ====== */
 .chat-container {
+  max-width: 600px;
+  margin: 30px auto;
+  background: white;
+  border-radius: 10px;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  height: 100vh;
-  max-width: 600px;
-  margin: auto;
-  background: #fff;
-  border: 1px solid #ddd;
-  border-radius: 12px;
-  overflow: hidden;
-  animation: fadeIn 0.5s ease-in-out;
+  height: 90vh;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
 }
 
 .chat-header {
   background: #0084ff;
   color: white;
   padding: 15px;
-  font-weight: bold;
+  font-size: 18px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -78,59 +28,73 @@ body {
 
 .chat-messages {
   flex: 1;
-  padding: 15px;
   overflow-y: auto;
-  background: #f7f7f7;
+  padding: 15px;
 }
 
-/* ====== Tin nhắn ====== */
 .message-row {
   display: flex;
   align-items: flex-end;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
+  animation: slideUpFade 0.3s ease;
 }
 
 .message-row.mine {
   justify-content: flex-end;
 }
 
-.message-row.other {
-  justify-content: flex-start;
+.avatar {
+  width: 32px;
+  height: 32px;
+  background: #ccc;
+  border-radius: 50%;
+  text-align: center;
+  line-height: 32px;
+  font-weight: bold;
+  margin-right: 8px;
+  flex-shrink: 0;
+  object-fit: cover;
+}
+
+.avatar-spacer {
+  width: 32px;
+  margin-right: 8px;
 }
 
 .message-content {
   max-width: 70%;
 }
 
+.username {
+  font-size: 12px;
+  color: #555;
+  margin: 0 0 2px 0;
+}
+
 .bubble {
-  padding: 10px 15px;
+  padding: 10px 14px;
   border-radius: 18px;
-  margin: 3px 0;
-  color: white;
   font-size: 14px;
-  display: inline-block;
+  word-break: break-word;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  color: white;
 }
 
 .bubble-mine {
   background: #0084ff;
-  border-bottom-right-radius: 4px;
+  color: white;
+  border-bottom-right-radius: 3px;
 }
 
 .bubble-other {
-  background: #555;
-  border-bottom-left-radius: 4px;
-}
-
-.username {
-  font-size: 12px;
-  font-weight: bold;
-  margin: 0 0 2px 5px;
-  color: #444;
+  color: white;
+  border-bottom-left-radius: 3px;
+  margin-left: 4px;
 }
 
 .time {
   font-size: 10px;
-  color: #999;
+  color: gray;
   margin-top: 2px;
 }
 
@@ -142,36 +106,10 @@ body {
   text-align: left;
 }
 
-/* ====== Avatar ====== */
-.avatar-container {
-  margin-right: 8px;
-}
-
-.avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: #0084ff;
-  color: white;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-size: 14px;
-  font-weight: bold;
-}
-
-.avatar-spacer {
-  width: 32px;
-  height: 32px;
-}
-
-/* ====== Thanh nhập tin nhắn ====== */
 .chat-input {
   display: flex;
   padding: 10px;
   border-top: 1px solid #ddd;
-  align-items: center;
-  position: relative;
 }
 
 .chat-input input {
@@ -183,14 +121,6 @@ body {
   font-size: 14px;
 }
 
-.emoji-btn {
-  background: none;
-  border: none;
-  font-size: 22px;
-  cursor: pointer;
-  margin-left: 5px;
-}
-
 .send-btn {
   background: #0084ff;
   color: white;
@@ -198,34 +128,52 @@ body {
   border-radius: 50%;
   width: 40px;
   height: 40px;
-  margin-left: 5px;
+  margin-left: 8px;
+  font-size: 18px;
   cursor: pointer;
+}
+
+.login-screen {
+  height: 100vh;
   display: flex;
-  justify-content: center;
   align-items: center;
+  justify-content: center;
+  background: #f0f2f5;
 }
 
-.send-btn:hover {
-  background: #006fe0;
+.login-box {
+  background: white;
+  padding: 30px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  text-align: center;
 }
 
-.emoji-picker {
-  position: absolute;
-  bottom: 60px;
-  right: 60px; /* hiển thị ngay trên nút emoji */
-  z-index: 10;
+.login-box input {
+  padding: 10px;
+  margin: 10px 0;
+  width: 200px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
 }
 
-/* ====== Gõ chữ ====== */
+.login-box button {
+  padding: 10px 15px;
+  background: #0084ff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
 .typing-indicator {
   font-size: 12px;
+  color: gray;
+  margin-left: 10px;
   font-style: italic;
-  color: #666;
-  margin: 5px 0;
 }
 
-/* ====== Animation ====== */
-@keyframes fadeIn {
+@keyframes slideUpFade {
   from {
     opacity: 0;
     transform: translateY(10px);
@@ -237,5 +185,20 @@ body {
 }
 
 .animate-message {
-  animation: fadeIn 0.3s ease-in-out;
+  animation: slideUpFade 0.3s ease forwards;
+}
+
+.emoji-btn {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  margin-right: 5px;
+}
+
+.emoji-picker {
+  position: absolute;
+  bottom: 60px;
+  left: 10px;
+  z-index: 10;
 }
