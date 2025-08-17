@@ -18,18 +18,6 @@ function App() {
 
   const chatEndRef = useRef(null);
 
-  // Hàm hash tên thành màu
-  const stringToColor = (str) => {
-    let hash = 0;
-    for (let i = 0; i < str.length; i++) {
-      hash = str.charCodeAt(i) + ((hash << 5) - hash);
-    }
-    const color = "#" + ((hash >> 24) & 0xFF).toString(16).padStart(2, "0") +
-      ((hash >> 16) & 0xFF).toString(16).padStart(2, "0") +
-      ((hash >> 8) & 0xFF).toString(16).padStart(2, "0");
-    return color;
-  };
-
   useEffect(() => {
     socket.on("chatHistory", (history) => setMessages(history));
     socket.on("receiveMessage", (msg) => setMessages((prev) => [...prev, msg]));
@@ -69,6 +57,7 @@ function App() {
       localStorage.setItem("chatUsername", username);
       localStorage.setItem("chatAvatar", avatar);
       setIsLoggedIn(true);
+      socket.emit("userJoined", { username, avatar });
     }
   };
 
@@ -132,7 +121,7 @@ function App() {
           const showUsername =
             index === 0 || messages[index - 1].username !== msg.username;
 
-          const bubbleColor = !isMine ? stringToColor(msg.username) : "#0084ff";
+          const bubbleColor = !isMine ? "#555" : "#0084ff";
 
           return (
             <div
@@ -186,6 +175,12 @@ function App() {
 
       {/* Input */}
       <div className="chat-input">
+        <input
+          value={message}
+          onChange={handleTyping}
+          placeholder="Nhập tin nhắn..."
+          onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+        />
         <button
           className="emoji-btn"
           onClick={() => setShowEmoji((prev) => !prev)}
@@ -197,12 +192,6 @@ function App() {
             <EmojiPicker onEmojiClick={onEmojiClick} />
           </div>
         )}
-        <input
-          value={message}
-          onChange={handleTyping}
-          placeholder="Nhập tin nhắn..."
-          onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-        />
         <button className="send-btn" onClick={sendMessage}>
           <img
             src="/send-icon.png"
